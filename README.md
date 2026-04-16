@@ -1,109 +1,59 @@
-# LS Windowed Mode Addon
+# LSP-Windowed-Mode — Virtual Monitor / Windowed Mode
 
-**LS Windowed Mode** is an experimental addon for **Lossless Scaling** that introduces a **secondary virtual display**, selectable directly from the Lossless Scaling menu.
+Enables windowed and borderless windowed mode for Lossless Scaling by injecting a virtual monitor. Lossless Scaling normally requires exclusive fullscreen — this addon tricks it into running in a window.
 
-When this virtual display is selected:
+## What It Does
 
-* the **Lossless Scaling overlay is no longer displayed in fullscreen**
-* instead, the overlay is shown **in windowed mode**, allowing for more flexible use cases such as multitasking or specific desktop setups.
+The addon hooks DXGI monitor enumeration APIs to inject a fake virtual monitor (`0xBADF00D`). Lossless Scaling sees this as a valid display target, allowing it to run in a window instead of requiring fullscreen.
 
-## Key Features
+Supported modes:
 
-*   **Fake Monitor Injection**: Creates a virtual DXGI adapter and output to trick the game and force it to render in a specific mode, bypassing exclusive fullscreen restrictions.
-*   **Split Mode**: Allows automatically resizing and positioning the game window in different areas of the screen (Left, Right, Top, Bottom). Ideal for multi-clienting.
-*   **Position Mode**: Allows anchoring the window to specific positions.
-*   **ImGui Interface**: Includes an in-game graphical overlay to configure settings in real-time.
-*   **Logging**: Integrated logging system for debugging.
-
----
-
-<img width="2269" height="1379" alt="Screenshot 2025-12-27 232140" src="https://github.com/user-attachments/assets/6124ed7b-8deb-4444-9c62-37de5ad1f272" />
-
-
----
+- **Split-Screen** — Position Lossless Scaling on half the screen (left/right/top/bottom), with the game on the other half
+- **Window Positioning** — Place the Lossless Scaling window next to the target game window at a custom position
 
 ## Installation
 
-To use this addon, you must **first install the LS Addon Manager (LosslessProxy)**.
+### Build
 
-### 1. Install LS Addon Manager
-
-Download the latest release of **LS Addon Manager (LosslessProxy)** from:
-👉 [https://github.com/FrankBarretta/LS-Addons-Manager](https://github.com/FrankBarretta/LS-Addons-Manager)
-
-Follow the instructions in that repository to complete the installation.
-
----
-
-### 2. Install LS Windowed Mode
-
-1. Download **`LS_Windowed.dll`** from the addon project’s release page.
-2. Go to the **main Lossless Scaling installation folder**.
-3. Create a folder named:
-
-   ```
-   addons
-   ```
-4. Inside the `addons` folder, create another folder named:
-
-   ```
-   LS_Windowed
-   ```
-5. Place the downloaded **`LS_Windowed.dll`** file inside the `LS_Windowed` folder.
-
-The final folder structure should look like this:
-
-```
-Lossless Scaling/
-└── addons/
-    └── LS_Windowed/
-        └── LS_Windowed.dll
+```bash
+cd Addons/LSP-Windowed-Mode
+mkdir build && cd build
+cmake .. -G "Visual Studio 17 2022" -A x64
+cmake --build . --config Release
 ```
 
----
+### Deploy
 
-✅ **Done!**
-The addon is now installed and available in Lossless Scaling.
+1. Create a folder: `<Lossless Scaling>/addons/LSP-Windowed-Mode/`
+2. Copy `LSP_Windowed.dll` and `addon.json` into that folder
+3. Restart Lossless Scaling
+
+## Configuration
+
+Open the LosslessProxy overlay and navigate to the Windowed Mode settings tab.
+
+| Setting | Description |
+|---------|-------------|
+| Mode | Split-Screen or Window Positioning |
+| Split Direction | Left, Right, Top, or Bottom (split-screen mode) |
+| Target Window | Which window to position next to (positioning mode) |
+
+## How It Works
+
+- Uses **MinHook** to intercept DXGI's `IMonitorEnumSink` and related interfaces
+- Injects a fake monitor with handle `0xBADF00D` into the enumeration results
+- Hooks `IDXGIOutput::GetDesc` to return fabricated monitor geometry
+- Calculates window rectangles for split-screen or side-by-side layouts
+- Integrates with D3D11 for Direct3D-aware window management
 
 ## Requirements
 
-*   **CMake** (version 3.15 or higher)
-*   **C++ Compiler** with C++17 support (e.g., Visual Studio 2019/2022)
-*   **LosslessProxy**: This addon depends on LosslessProxy headers (`addon_api.hpp`).
+- LosslessProxy v0.3.0+
+- Dependencies: MinHook (fetched automatically by CMake)
 
-## How to Build
 
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/FrankBarretta/LS-Addon-Windowed-Mode.git
-    cd LS-Addon-Windowed-Mode/LS_Windowed
-    ```
 
-2.  **Create the build directory**:
-    ```bash
-    mkdir build
-    cd build
-    ```
 
-3.  **Configure with CMake**:
-    ```bash
-    cmake ..
-    ```
-    *Note: If you are using Visual Studio, this will generate a `.sln` file.*
-
-4.  **Build the project**:
-    ```bash
-    cmake --build . --config Release
-    ```
-
-5.  **Output**:
-    The compiled file `LS_Windowed.dll` will be located in the `Release` folder (e.g., `build/Release/LS_Windowed.dll`).
-
-## Technologies Used
-
-*   [MinHook](https://github.com/TsudaKageyu/minhook): For hooking Windows and DirectX APIs.
-*   [ImGui](https://github.com/ocornut/imgui): For the graphical user interface.
-*   DirectX 11 (D3D11/DXGI): For graphics management and proxying.
 
 ## ⚠️ Disclaimer
 
@@ -130,6 +80,4 @@ non-documented ways.
 
 All trademarks, product names, and company names are the property
 of their respective owners and are used for identification purposes only.
-
-
 
